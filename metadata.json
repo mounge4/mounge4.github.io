@@ -1,0 +1,8 @@
+{
+  "name": "স্টেশন পাড়া দাওয়াহ্ কমিউনিটি",
+  "description": "দ্বীনের দাওয়াহ, ভ্রাতৃত্ব ও মানবসেবায় নিয়োজিত",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

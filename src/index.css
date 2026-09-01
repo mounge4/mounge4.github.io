@@ -1,0 +1,106 @@
+@import "tailwindcss";
+
+:root {
+  --color-primary: #059669;
+  --color-secondary: #d97706;
+  --color-heading: #022c22;
+  --color-body: #334155;
+  --color-card-bg: #ffffff;
+  --color-card-border: #e2e8f0;
+  --color-page-bg: #f8fafc;
+  --color-header-bg: #ffffff;
+  --color-footer-bg: #022c22;
+}
+
+@layer base {
+  *, ::before, ::after {
+    font-family: 'Noto Serif Bengali', serif;
+  }
+
+  html {
+    font-family: 'Noto Serif Bengali', serif;
+    scroll-behavior: smooth;
+    background-color: var(--color-page-bg);
+    color: var(--color-body);
+  }
+
+  body {
+    font-family: 'Noto Serif Bengali', serif;
+    background-color: var(--color-page-bg);
+    color: var(--color-body);
+    min-height: 100vh;
+  }
+
+  button, input, select, textarea, optgroup, option {
+    font-family: 'Noto Serif Bengali', serif;
+  }
+}
+
+.font-serif-bn,
+.font-sans-bn,
+.font-sans,
+.font-serif {
+  font-family: 'Noto Serif Bengali', serif !important;
+}
+
+.font-arabic {
+  font-family: 'Amiri', serif !important;
+}
+
+/* Custom subtle scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #f8fafc;
+}
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+.theme-btn-primary {
+  background-color: var(--color-primary);
+  color: #ffffff;
+}
+.theme-btn-primary:hover {
+  filter: brightness(0.92);
+}
+
+.theme-btn-secondary {
+  background-color: var(--color-secondary);
+  color: #ffffff;
+}
+.theme-btn-secondary:hover {
+  filter: brightness(0.92);
+}
+
+.theme-card {
+  background-color: var(--color-card-bg);
+  border-color: var(--color-card-border);
+}
+
+.theme-text-primary {
+  color: var(--color-primary);
+}
+
+.theme-text-heading {
+  color: var(--color-heading);
+}
+
+@keyframes google-rgb-spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.google-rgb-spin {
+  animation: google-rgb-spin 3.5s linear infinite;
+}
