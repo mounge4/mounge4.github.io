@@ -25,6 +25,7 @@ import {
 } from 'lucide-react';
 import { LOADING_PLACEHOLDER_IMAGE, LOADING_AVATAR_PLACEHOLDER } from '../../utils/imageHelper';
 import { LatexEditorField } from '../LaTeXRenderer/LatexEditorField';
+import { isLikelyLatex } from '../LaTeXRenderer/LaTeXContentRenderer';
 
 interface ModalWrapperProps {
   title: string;
@@ -285,7 +286,11 @@ export const NoticeModal: React.FC<NoticeModalProps> = ({ isOpen, notice, onSave
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.title.trim()) return;
-    onSave(formData);
+    const finalData = {
+      ...formData,
+      contentType: (formData.contentType === 'latex' || isLikelyLatex(formData.description)) ? ('latex' as const) : ('plain' as const)
+    };
+    onSave(finalData);
     onClose();
   };
 
@@ -897,7 +902,8 @@ export const BlogModal: React.FC<BlogModalProps> = ({ isOpen, blog, onSave, onCl
     onSave({
       ...formData,
       slug: formData.slug || `post-${Date.now()}`,
-      tags: parsedTags.length > 0 ? parsedTags : ['ইসলাম']
+      tags: parsedTags.length > 0 ? parsedTags : ['ইসলাম'],
+      contentType: (formData.contentType === 'latex' || isLikelyLatex(formData.content)) ? ('latex' as const) : ('plain' as const)
     });
     onClose();
   };

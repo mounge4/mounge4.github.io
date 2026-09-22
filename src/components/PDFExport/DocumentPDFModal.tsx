@@ -163,6 +163,19 @@ export const DocumentPDFModal: React.FC<DocumentPDFModalProps> = ({
       innerContent.style.border = 'none';
       innerContent.style.position = 'relative';
 
+      // CRITICAL: Ensure logo or any images in header never blow up to natural dimensions in html2canvas
+      innerContent.querySelectorAll('img').forEach((img) => {
+        img.style.width = '56px';
+        img.style.height = '56px';
+        img.style.maxWidth = '56px';
+        img.style.maxHeight = '56px';
+        img.style.objectFit = 'contain';
+        img.style.flexShrink = '0';
+        img.style.display = 'inline-block';
+        img.setAttribute('width', '56');
+        img.setAttribute('height', '56');
+      });
+
       viewportContainer.appendChild(innerContent);
       document.body.appendChild(viewportContainer);
 
@@ -187,13 +200,6 @@ export const DocumentPDFModal: React.FC<DocumentPDFModalProps> = ({
         await new Promise(resolve => setTimeout(resolve, 60));
       }
 
-      // Calculate total required pages safely
-      let totalPages = Math.ceil(effectiveScrollHeight / printablePageHeightPx);
-      if (totalPages > 1 && (effectiveScrollHeight % printablePageHeightPx < 60)) {
-        // If remaining slice is less than 60px (just trailing padding), do not add extra page
-        totalPages = Math.max(1, totalPages - 1);
-      }
-
       // Initialize portrait A4 PDF
       const pdf = new jsPDF({
         orientation: 'portrait',
@@ -202,26 +208,121 @@ export const DocumentPDFModal: React.FC<DocumentPDFModalProps> = ({
         compress: true
       });
 
-      let currentScrollY = 0;
-      let pageNumber = 1;
+      // SMART PARAGRAPH-AWARE PAGINATION:
+      // Prevent cutting through paragraphs or headings when multi-page document is rendered
+      const containerRect = innerContent.getBoundingClientRect();
+      const elementsToAvoidBreaking = innerContent.querySelectorAll<HTMLElement>(
+        'h1, h2, h3, h4, h5, h6, p, blockquote, ul, ol, li, hr, .page-break-marker, [class*="break-inside-avoid"], .latex-rendered-content > div, .latex-rendered-content > p, .latex-rendered-content > blockquote, .latex-rendered-content > ul, .latex-rendered-content > ol'
+      );
 
-      while (currentScrollY < effectiveScrollHeight && pageNumber <= totalPages) {
+      // Pre-calculate smart slice breaks so paragraphs are never cut in half
+      const pageBreaks: { startY: number; height: number }[] = [];
+
+      if (canAutoFitSingle) {
+        pageBreaks.push({ startY: 0, height: printablePageHeightPx });
+      } else {
+        let scanY = 0;
+        while (scanY < effectiveScrollHeight) {
+          const remaining = effectiveScrollHeight - scanY;
+          if (remaining <= printablePageHeightPx) {
+            // Check if there is an explicit page-break within remaining
+            let explicitBreakY: number | null = null;
+            for (let j = 0; j < elementsToAvoidBreaking.length; j++) {
+              const el = elementsToAvoidBreaking[j];
+              if (el.classList.contains('page-break-marker')) {
+                const rect = el.getBoundingClientRect();
+                const elTop = rect.top - containerRect.top;
+                if (elTop > scanY + 40 && elTop < scanY + remaining - 40) {
+                  explicitBreakY = elTop;
+                  break;
+                }
+              }
+            }
+            if (explicitBreakY !== null) {
+              pageBreaks.push({ startY: scanY, height: explicitBreakY - scanY });
+              scanY = explicitBreakY;
+              continue;
+            }
+
+            pageBreaks.push({ startY: scanY, height: remaining });
+            break;
+          }
+
+          const targetBoundary = scanY + printablePageHeightPx;
+          let safeCutY = targetBoundary;
+
+          // Check each paragraph / heading / block element
+          for (let j = 0; j < elementsToAvoidBreaking.length; j++) {
+            const el = elementsToAvoidBreaking[j];
+            const rect = el.getBoundingClientRect();
+            const elTop = rect.top - containerRect.top;
+            const elBottom = rect.bottom - containerRect.top;
+
+            // 1. Explicit page break marker (\newpage / \pagebreak)
+            if (el.classList.contains('page-break-marker')) {
+              if (elTop > scanY + 40 && elTop <= targetBoundary) {
+                safeCutY = elTop;
+                break;
+              }
+            }
+
+            // 2. If an element crosses the boundary line (starts before, ends after)
+            if (elTop < targetBoundary && elBottom > targetBoundary) {
+              const elementHeight = elBottom - elTop;
+              // Push the entire element to the next page if there's already content on this page
+              // and the element itself can fit on the next page
+              if (elTop - scanY >= 50 && elementHeight < printablePageHeightPx) {
+                safeCutY = elTop;
+                break;
+              }
+            }
+
+            // 3. Prevent orphan headings: if a heading starts near the bottom (within 130px)
+            if (
+              el.tagName.match(/^H[1-6]$/i) &&
+              elTop < targetBoundary &&
+              targetBoundary - elTop < 130
+            ) {
+              if (elTop - scanY >= 50) {
+                safeCutY = elTop;
+                break;
+              }
+            }
+          }
+
+          const sliceHeight = Math.min(printablePageHeightPx, safeCutY - scanY);
+          pageBreaks.push({ startY: scanY, height: sliceHeight });
+          scanY += sliceHeight;
+
+          // If remaining height is negligible (< 50px), avoid trailing blank page
+          if (effectiveScrollHeight - scanY < 50) {
+            break;
+          }
+        }
+      }
+
+      const totalPages = pageBreaks.length;
+
+      // Render each page cleanly
+      for (let pIndex = 0; pIndex < pageBreaks.length; pIndex++) {
+        const pageInfo = pageBreaks[pIndex];
+        const pageNumber = pIndex + 1;
+
         if (pageNumber > 1) {
           pdf.addPage('a4', 'portrait');
         }
 
-        const remainingHeight = effectiveScrollHeight - currentScrollY;
-        const currentSliceHeight = Math.min(printablePageHeightPx, remainingHeight);
+        const currentSliceHeight = pageInfo.height;
 
-        // Shift inner content up to show current page slice (unless auto-fitted single page)
+        // Shift inner content up to show current page slice (unless single-page scale fit)
         if (!canAutoFitSingle) {
-          innerContent.style.transform = `translateY(-${currentScrollY}px)`;
+          innerContent.style.transform = `translateY(-${pageInfo.startY}px)`;
         }
         viewportContainer.style.height = `${currentSliceHeight}px`;
 
         await new Promise(resolve => setTimeout(resolve, 60));
 
-        // Capture only the fixed-size viewport element (never exceeds printable height)
+        // Capture only the fixed-size viewport element
         const canvas = await html2canvas(viewportContainer, {
           scale: 2,
           useCORS: true,
@@ -235,7 +336,7 @@ export const DocumentPDFModal: React.FC<DocumentPDFModalProps> = ({
         });
 
         const imgData = canvas.toDataURL('image/jpeg', 0.95);
-        const sliceHeightMm = (currentSliceHeight / printablePageHeightPx) * PRINT_HEIGHT_MM;
+        const sliceHeightMm = (currentSliceHeight / pxPerMm);
 
         // Render document slice onto PDF with configured top margin
         pdf.addImage(
@@ -260,15 +361,6 @@ export const DocumentPDFModal: React.FC<DocumentPDFModalProps> = ({
           35,
           6
         );
-
-        currentScrollY += currentSliceHeight;
-
-        // If remaining height after this page is negligible (< 60px), stop to prevent blank page
-        if (effectiveScrollHeight - currentScrollY < 60) {
-          break;
-        }
-
-        pageNumber++;
       }
 
       // Remove staging viewport DOM element
@@ -514,7 +606,18 @@ export const DocumentPDFModal: React.FC<DocumentPDFModalProps> = ({
                       <img 
                         src={logoUrl} 
                         alt={foundationName} 
-                        className="w-14 h-14 object-contain rounded-full border border-emerald-200 p-0.5 shadow-xs"
+                        width="56"
+                        height="56"
+                        style={{
+                          width: '56px',
+                          height: '56px',
+                          maxWidth: '56px',
+                          maxHeight: '56px',
+                          objectFit: 'contain',
+                          flexShrink: 0,
+                          display: 'inline-block'
+                        }}
+                        className="w-14 h-14 object-contain rounded-full border border-emerald-200 p-0.5 shadow-xs shrink-0"
                         crossOrigin="anonymous"
                       />
                     ) : (

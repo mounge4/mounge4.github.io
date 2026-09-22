@@ -118,6 +118,13 @@ export const LatexEditorField: React.FC<LatexEditorFieldProps> = ({
           <div className="flex flex-wrap gap-1.5">
             <button
               type="button"
+              onClick={() => insertSnippet('{\\Large\\bfseries শিরোনাম}')}
+              className="px-2 py-0.5 rounded-md bg-white border border-emerald-200 hover:bg-emerald-100 text-emerald-900 text-[11px] font-mono cursor-pointer"
+            >
+              \Large\bfseries
+            </button>
+            <button
+              type="button"
               onClick={() => insertSnippet('\\section{নতুন অনুচ্ছেদ শিরোনাম}')}
               className="px-2 py-0.5 rounded-md bg-white border border-emerald-200 hover:bg-emerald-100 text-emerald-900 text-[11px] font-mono cursor-pointer"
             >
@@ -129,6 +136,27 @@ export const LatexEditorField: React.FC<LatexEditorFieldProps> = ({
               className="px-2 py-0.5 rounded-md bg-white border border-emerald-200 hover:bg-emerald-100 text-emerald-900 text-[11px] font-mono cursor-pointer"
             >
               \textbf&#123;...&#125;
+            </button>
+            <button
+              type="button"
+              onClick={() => insertSnippet('\\underline{\\hspace{5cm}}')}
+              className="px-2 py-0.5 rounded-md bg-white border border-emerald-200 hover:bg-emerald-100 text-emerald-900 text-[11px] font-mono cursor-pointer"
+            >
+              ফাঁকা স্থান (\underline&#123;\hspace&#125;)
+            </button>
+            <button
+              type="button"
+              onClick={() => insertSnippet('\\href{https://example.com}{লিংকের নাম}')}
+              className="px-2 py-0.5 rounded-md bg-white border border-emerald-200 hover:bg-emerald-100 text-emerald-900 text-[11px] font-mono cursor-pointer"
+            >
+              \href&#123;url&#125;&#123;নাম&#125;
+            </button>
+            <button
+              type="button"
+              onClick={() => insertSnippet('\\newpage')}
+              className="px-2 py-0.5 rounded-md bg-white border border-emerald-200 hover:bg-emerald-100 text-emerald-900 text-[11px] font-mono cursor-pointer"
+            >
+              নতুন পৃষ্ঠা (\newpage)
             </button>
             <button
               type="button"
