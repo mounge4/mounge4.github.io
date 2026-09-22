@@ -1,21 +1,26 @@
 import React, { useState } from 'react';
 import { NoticeItem } from '../types';
-import { X, Bell, Calendar, Search, FileText, ExternalLink, ChevronRight, AlertCircle, Copy, Check } from 'lucide-react';
+import { X, Bell, Calendar, Search, FileText, ExternalLink, ChevronRight, AlertCircle, Copy, Check, Download } from 'lucide-react';
+import { LaTeXContentRenderer } from './LaTeXRenderer/LaTeXContentRenderer';
+import { DocumentPDFModal, DocumentPDFData } from './PDFExport/DocumentPDFModal';
 
 interface NoticeModalProps {
   notices: NoticeItem[];
   initialSelected: NoticeItem | null;
   onClose: () => void;
+  settings?: any;
 }
 
 export const NoticeModal: React.FC<NoticeModalProps> = ({
   notices,
   initialSelected,
-  onClose
+  onClose,
+  settings
 }) => {
   const [selected, setSelected] = useState<NoticeItem | null>(initialSelected || (notices.length > 0 ? notices[0] : null));
   const [searchTerm, setSearchTerm] = useState('');
   const [copied, setCopied] = useState(false);
+  const [pdfData, setPdfData] = useState<DocumentPDFData | null>(null);
 
   const filteredNotices = notices.filter(n => 
     n.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -154,8 +159,12 @@ export const NoticeModal: React.FC<NoticeModalProps> = ({
                   {selected.title}
                 </h3>
 
-                <div className="prose prose-slate max-w-none text-sm text-slate-700 font-sans-bn leading-relaxed whitespace-pre-line mb-6">
-                  {selected.description}
+                <div className="mb-6">
+                  <LaTeXContentRenderer
+                    content={selected.description}
+                    contentType={selected.contentType}
+                    className="text-sm text-slate-700 font-serif-bn"
+                  />
                 </div>
 
                 {/* Attachments or links */}
@@ -195,13 +204,33 @@ export const NoticeModal: React.FC<NoticeModalProps> = ({
 
             <div className="mt-8 pt-4 border-t border-slate-100 flex items-center justify-between gap-3 flex-wrap">
               {selected ? (
-                <button
-                  onClick={handleCopy}
-                  className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition-colors cursor-pointer"
-                >
-                  {copied ? <Check className="w-4 h-4 text-emerald-600" /> : <Copy className="w-4 h-4" />}
-                  <span>{copied ? 'কপি হয়েছে' : 'লিংক কপি করুন'}</span>
-                </button>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <button
+                    onClick={handleCopy}
+                    className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition-colors cursor-pointer"
+                  >
+                    {copied ? <Check className="w-4 h-4 text-emerald-600" /> : <Copy className="w-4 h-4" />}
+                    <span>{copied ? 'কপি হয়েছে' : 'লিংক কপি করুন'}</span>
+                  </button>
+
+                  <button
+                    onClick={() => setPdfData({
+                      type: 'notice',
+                      title: selected.title,
+                      category: selected.category,
+                      date: selected.date,
+                      isImportant: selected.isImportant,
+                      content: selected.description,
+                      contentType: selected.contentType,
+                      fileUrl: selected.fileUrl,
+                      linkUrl: selected.linkUrl
+                    })}
+                    className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition-all shadow-xs cursor-pointer"
+                  >
+                    <Download className="w-4 h-4" />
+                    <span>পিডিএফ ডাউনলোড</span>
+                  </button>
+                </div>
               ) : <div />}
 
               <button
@@ -216,6 +245,14 @@ export const NoticeModal: React.FC<NoticeModalProps> = ({
         </div>
 
       </div>
+
+      {/* PDF Generation and Download Modal */}
+      <DocumentPDFModal
+        isOpen={!!pdfData}
+        onClose={() => setPdfData(null)}
+        documentData={pdfData}
+        settings={settings}
+      />
     </div>
   );
 };

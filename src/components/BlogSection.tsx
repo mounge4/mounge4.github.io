@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { BlogPost } from '../types';
+import { BlogPost, SiteSettings } from '../types';
 import { 
   Sparkles, 
   Calendar, 
@@ -13,19 +13,24 @@ import {
   ChevronRight,
   BookOpen,
   User,
-  Search
+  Search,
+  Download
 } from 'lucide-react';
 import { formatDriveImageUrl, LOADING_PLACEHOLDER_IMAGE } from '../utils/imageHelper';
 import { getYouTubeEmbedUrl } from '../utils/mediaHelper';
+import { LaTeXContentRenderer } from './LaTeXRenderer/LaTeXContentRenderer';
+import { DocumentPDFModal, DocumentPDFData } from './PDFExport/DocumentPDFModal';
 
 interface BlogSectionProps {
   blogs: BlogPost[];
+  settings?: SiteSettings;
   initialArticleId?: string | null;
   onClearArticle?: () => void;
 }
 
 export const BlogSection: React.FC<BlogSectionProps> = ({ 
   blogs,
+  settings,
   initialArticleId,
   onClearArticle
 }) => {
@@ -35,6 +40,7 @@ export const BlogSection: React.FC<BlogSectionProps> = ({
   const [selectedCategory, setSelectedCategory] = useState<string>('সকল');
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [pdfData, setPdfData] = useState<DocumentPDFData | null>(null);
 
   // Deep linking: Open article automatically if URL hash or initialArticleId matches
   useEffect(() => {
@@ -217,11 +223,32 @@ export const BlogSection: React.FC<BlogSectionProps> = ({
                   </button>
 
                   <button
+                    onClick={() => setPdfData({
+                      type: 'blog',
+                      title: currentFeatured.title,
+                      category: currentFeatured.category,
+                      date: currentFeatured.date,
+                      author: currentFeatured.author,
+                      authorRole: currentFeatured.authorRole,
+                      readTime: currentFeatured.readTime,
+                      content: currentFeatured.content,
+                      contentType: currentFeatured.contentType,
+                      fileUrl: currentFeatured.imageUrl,
+                      linkUrl: currentFeatured.videoUrl
+                    })}
+                    className="p-2.5 rounded-xl bg-white/15 hover:bg-white/25 text-white transition-all cursor-pointer flex items-center gap-1.5"
+                    title="আর্টিকেলটি পিডিএফ আকারে ডাউনলোড করুন"
+                  >
+                    <Download className="w-4 h-4 text-emerald-400" />
+                    <span className="text-xs font-serif-bn hidden sm:inline">পিডিএফ ডাউনলোড</span>
+                  </button>
+
+                  <button
                     onClick={(e) => handleCopyLink(currentFeatured, e)}
                     className="p-2.5 rounded-xl bg-white/15 hover:bg-white/25 text-white transition-all cursor-pointer flex items-center gap-1.5"
                     title="আর্টিকেলের লিংক কপি করুন"
                   >
-                    {copiedId === currentFeatured.id ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
+                    {copiedId === currentFeatured.id ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4 text-white" />}
                     <span className="text-xs font-serif-bn hidden sm:inline">{copiedId === currentFeatured.id ? 'কপি হয়েছে' : 'লিংক কপি'}</span>
                   </button>
                 </div>
@@ -341,6 +368,28 @@ export const BlogSection: React.FC<BlogSectionProps> = ({
                       {blog.readTime}
                     </span>
                     <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setPdfData({
+                          type: 'blog',
+                          title: blog.title,
+                          category: blog.category,
+                          date: blog.date,
+                          author: blog.author,
+                          authorRole: blog.authorRole,
+                          readTime: blog.readTime,
+                          content: blog.content,
+                          contentType: blog.contentType,
+                          fileUrl: blog.imageUrl,
+                          linkUrl: blog.videoUrl
+                        });
+                      }}
+                      className="p-1.5 rounded-xl bg-slate-100 hover:bg-emerald-50 text-slate-600 hover:text-emerald-800 transition-colors cursor-pointer"
+                      title="আর্টিকেলটি পিডিএফ আকারে ডাউনলোড করুন"
+                    >
+                      <Download className="w-3.5 h-3.5" />
+                    </button>
+                    <button
                       onClick={(e) => handleCopyLink(blog, e)}
                       className="p-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 transition-colors cursor-pointer"
                       title="আর্টিকেলের লিংক কপি করুন"
@@ -352,7 +401,7 @@ export const BlogSection: React.FC<BlogSectionProps> = ({
                         e.stopPropagation();
                         handleOpenBlog(blog);
                       }}
-                      className="px-3 py-1.5 rounded-xl bg-slate-100 group-hover:bg-emerald-700 group-hover:text-white text-slate-700 text-xs font-bold font-serif-bn transition-all shadow-2xs"
+                      className="px-3 py-1.5 rounded-xl bg-slate-100 group-hover:bg-emerald-700 group-hover:text-white text-slate-700 text-xs font-bold font-serif-bn transition-all shadow-2xs cursor-pointer"
                     >
                       বিস্তারিত পড়ুন →
                     </button>
@@ -380,13 +429,35 @@ export const BlogSection: React.FC<BlogSectionProps> = ({
                   (e.target as HTMLImageElement).src = LOADING_PLACEHOLDER_IMAGE;
                 }}
               />
-              <button
-                onClick={handleCloseBlog}
-                className="absolute top-4 right-4 p-2 rounded-full bg-black/60 hover:bg-black/90 text-white backdrop-blur-xs transition-colors cursor-pointer"
-                title="বন্ধ করুন"
-              >
-                <X className="w-5 h-5" />
-              </button>
+              <div className="absolute top-4 right-4 flex items-center gap-2">
+                <button
+                  onClick={() => setPdfData({
+                    type: 'blog',
+                    title: selectedBlog.title,
+                    category: selectedBlog.category,
+                    date: selectedBlog.date,
+                    author: selectedBlog.author,
+                    authorRole: selectedBlog.authorRole,
+                    readTime: selectedBlog.readTime,
+                    content: selectedBlog.content,
+                    contentType: selectedBlog.contentType,
+                    fileUrl: selectedBlog.imageUrl,
+                    linkUrl: selectedBlog.videoUrl
+                  })}
+                  className="inline-flex items-center gap-1.5 px-3 py-2 rounded-full bg-emerald-600/90 hover:bg-emerald-600 text-white backdrop-blur-xs text-xs font-bold font-serif-bn transition-colors cursor-pointer shadow-md"
+                  title="আর্টিকেলটি পিডিএফ আকারে ডাউনলোড করুন"
+                >
+                  <Download className="w-4 h-4" />
+                  <span className="hidden sm:inline">পিডিএফ ডাউনলোড</span>
+                </button>
+                <button
+                  onClick={handleCloseBlog}
+                  className="p-2 rounded-full bg-black/60 hover:bg-black/90 text-white backdrop-blur-xs transition-colors cursor-pointer"
+                  title="বন্ধ করুন"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
             </div>
 
             {/* Modal Body */}
@@ -429,19 +500,43 @@ export const BlogSection: React.FC<BlogSectionProps> = ({
                 </div>
               )}
 
-              <div className="prose max-w-none text-sm sm:text-base leading-relaxed text-slate-700 font-serif-bn whitespace-pre-line border-t border-slate-100 pt-5">
-                {selectedBlog.content}
+              <div className="border-t border-slate-100 pt-5">
+                <LaTeXContentRenderer
+                  content={selectedBlog.content}
+                  contentType={selectedBlog.contentType}
+                  className="text-sm sm:text-base leading-relaxed text-slate-800"
+                />
               </div>
 
-              {/* Social Share & Link copy */}
+              {/* Social Share & Link copy & PDF Download */}
               <div className="pt-6 border-t border-slate-200 flex items-center justify-between flex-wrap gap-3">
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-wrap">
                   <button
                     onClick={() => handleCopyLink(selectedBlog)}
                     className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition-colors cursor-pointer"
                   >
                     {copiedId === selectedBlog.id ? <Check className="w-4 h-4 text-emerald-600" /> : <Copy className="w-4 h-4" />}
                     <span>{copiedId === selectedBlog.id ? 'কপি হয়েছে' : 'লিংক কপি করুন'}</span>
+                  </button>
+
+                  <button
+                    onClick={() => setPdfData({
+                      type: 'blog',
+                      title: selectedBlog.title,
+                      category: selectedBlog.category,
+                      date: selectedBlog.date,
+                      author: selectedBlog.author,
+                      authorRole: selectedBlog.authorRole,
+                      readTime: selectedBlog.readTime,
+                      content: selectedBlog.content,
+                      contentType: selectedBlog.contentType,
+                      fileUrl: selectedBlog.imageUrl,
+                      linkUrl: selectedBlog.videoUrl
+                    })}
+                    className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition-colors cursor-pointer shadow-xs"
+                  >
+                    <Download className="w-4 h-4" />
+                    <span>পিডিএফ ডাউনলোড</span>
                   </button>
                 </div>
 
@@ -457,6 +552,14 @@ export const BlogSection: React.FC<BlogSectionProps> = ({
           </div>
         </div>
       )}
+
+      {/* PDF Generation and Download Modal */}
+      <DocumentPDFModal
+        isOpen={!!pdfData}
+        onClose={() => setPdfData(null)}
+        documentData={pdfData}
+        settings={settings}
+      />
 
       {/* Toast Notification */}
       {toastMessage && (

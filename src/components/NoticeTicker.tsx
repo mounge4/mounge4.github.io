@@ -1,13 +1,14 @@
 import React, { useState } from 'react';
-import { NoticeItem } from '../types';
+import { NoticeItem, SiteSettings } from '../types';
 import { Bell, ChevronRight, Sparkles, ExternalLink, Calendar } from 'lucide-react';
 import { NoticeModal } from './NoticeModal';
 
 interface NoticeTickerProps {
   notices: NoticeItem[];
+  settings?: SiteSettings;
 }
 
-export const NoticeTicker: React.FC<NoticeTickerProps> = ({ notices }) => {
+export const NoticeTicker: React.FC<NoticeTickerProps> = ({ notices, settings }) => {
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedNotice, setSelectedNotice] = useState<NoticeItem | null>(null);
 
@@ -82,6 +83,7 @@ export const NoticeTicker: React.FC<NoticeTickerProps> = ({ notices }) => {
         <NoticeModal
           notices={activeNotices}
           initialSelected={selectedNotice}
+          settings={settings}
           onClose={() => {
             setModalOpen(false);
             setSelectedNotice(null);

@@ -24,6 +24,7 @@ import {
   Sparkles
 } from 'lucide-react';
 import { LOADING_PLACEHOLDER_IMAGE, LOADING_AVATAR_PLACEHOLDER } from '../../utils/imageHelper';
+import { LatexEditorField } from '../LaTeXRenderer/LatexEditorField';
 
 interface ModalWrapperProps {
   title: string;
@@ -250,6 +251,7 @@ export const NoticeModal: React.FC<NoticeModalProps> = ({ isOpen, notice, onSave
     id: `notice-${Date.now()}`,
     title: '',
     description: '',
+    contentType: 'plain',
     date: new Date().toLocaleDateString('bn-BD'),
     isImportant: false,
     category: 'সাধারণ নোটিস',
@@ -260,12 +262,16 @@ export const NoticeModal: React.FC<NoticeModalProps> = ({ isOpen, notice, onSave
 
   useEffect(() => {
     if (notice) {
-      setFormData(notice);
+      setFormData({
+        ...notice,
+        contentType: notice.contentType || 'plain'
+      });
     } else {
       setFormData({
         id: `notice-${Date.now()}`,
         title: '',
         description: '',
+        contentType: 'plain',
         date: new Date().toLocaleDateString('bn-BD'),
         isImportant: false,
         category: 'জরুরি নোটিস',
@@ -328,17 +334,16 @@ export const NoticeModal: React.FC<NoticeModalProps> = ({ isOpen, notice, onSave
           </div>
         </div>
 
-        <div>
-          <label className="block font-bold text-slate-800 mb-1 font-serif-bn">পূর্ণাঙ্গ বিবরণ</label>
-          <textarea
-            rows={4}
-            required
-            placeholder="নোটিসের বিস্তারিত বিবরণ লিখুন..."
-            value={formData.description}
-            onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-            className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-serif-bn focus:ring-2 focus:ring-emerald-500"
-          />
-        </div>
+        <LatexEditorField
+          label="পূর্ণাঙ্গ বিবরণ"
+          required
+          value={formData.description}
+          onChange={(val) => setFormData({ ...formData, description: val })}
+          contentType={formData.contentType || 'plain'}
+          onContentTypeChange={(type) => setFormData({ ...formData, contentType: type })}
+          placeholder="নোটিসের বিস্তারিত বিবরণ লিখুন (সাধারণ লেখা অথবা LaTeX কোড)..."
+          rows={5}
+        />
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
@@ -839,6 +844,7 @@ export const BlogModal: React.FC<BlogModalProps> = ({ isOpen, blog, onSave, onCl
     slug: '',
     excerpt: '',
     content: '',
+    contentType: 'plain',
     author: 'ফাউন্ডেশন ডেস্ক',
     authorRole: 'গবেষক ও লেখক',
     date: new Date().toLocaleDateString('bn-BD'),
@@ -853,7 +859,10 @@ export const BlogModal: React.FC<BlogModalProps> = ({ isOpen, blog, onSave, onCl
 
   useEffect(() => {
     if (blog) {
-      setFormData(blog);
+      setFormData({
+        ...blog,
+        contentType: blog.contentType || 'plain'
+      });
       setTagInput(blog.tags.join(', '));
     } else {
       setFormData({
@@ -862,6 +871,7 @@ export const BlogModal: React.FC<BlogModalProps> = ({ isOpen, blog, onSave, onCl
         slug: '',
         excerpt: '',
         content: '',
+        contentType: 'plain',
         author: 'ফাউন্ডেশন ডেস্ক',
         authorRole: 'লেখক',
         date: new Date().toLocaleDateString('bn-BD'),
@@ -997,17 +1007,16 @@ export const BlogModal: React.FC<BlogModalProps> = ({ isOpen, blog, onSave, onCl
           />
         </div>
 
-        <div>
-          <label className="block font-bold text-slate-800 mb-1 font-serif-bn">সম্পূর্ণ আর্টিকেল / কনটেন্ট</label>
-          <textarea
-            rows={6}
-            required
-            placeholder="সম্পূর্ণ প্রবন্ধের বিস্তারিত লেখা..."
-            value={formData.content}
-            onChange={(e) => setFormData({ ...formData, content: e.target.value })}
-            className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-serif-bn focus:ring-2 focus:ring-emerald-500"
-          />
-        </div>
+        <LatexEditorField
+          label="সম্পূর্ণ আর্টিকেল / কনটেন্ট"
+          required
+          value={formData.content}
+          onChange={(val) => setFormData({ ...formData, content: val })}
+          contentType={formData.contentType || 'plain'}
+          onContentTypeChange={(type) => setFormData({ ...formData, contentType: type })}
+          placeholder="সম্পূর্ণ প্রবন্ধের বিস্তারিত লেখা (সাধারণ লেখা অথবা হাদিস, আরবি উদ্ধৃতি ও LaTeX কোড)..."
+          rows={8}
+        />
 
         <div className="pt-4 border-t border-slate-100 flex items-center justify-end gap-3">
           <button

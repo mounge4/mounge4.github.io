@@ -72,6 +72,7 @@ export interface NoticeItem {
   fileUrl?: string;
   linkUrl?: string;
   active: boolean;
+  contentType?: 'plain' | 'latex';
 }
 
 export interface ActivityItem {
@@ -106,6 +107,7 @@ export interface BlogPost {
   tags: string[];
   readTime: string;
   views?: number;
+  contentType?: 'plain' | 'latex';
 }
 
 export interface GalleryPhoto {

@@ -320,6 +320,7 @@ export default function App() {
           <div className="py-8 space-y-8 animate-fade-in">
             <NoticesSection
               notices={db.notices}
+              settings={db.settings}
               initialNoticeId={targetNoticeId}
               onNavigate={handleNavigate}
               onClearNotice={() => setTargetNoticeId(null)}
@@ -340,6 +341,7 @@ export default function App() {
           <div className="py-8 space-y-8 animate-fade-in">
             <BlogSection 
               blogs={db.blogs} 
+              settings={db.settings}
               initialArticleId={targetArticleId}
               onClearArticle={() => setTargetArticleId(null)}
             />
@@ -395,7 +397,10 @@ export default function App() {
             />
 
             {/* 2. Notice Ticker with quick action */}
-            <NoticeTicker notices={db.notices} />
+            <NoticeTicker 
+              notices={db.notices} 
+              settings={db.settings}
+            />
 
             {/* 3. Core Islamic Mission & Hadith/Quran Banner Slider */}
             <MissionBanner 
@@ -423,6 +428,7 @@ export default function App() {
             {/* 7. Recent Islamic Blogs & Articles */}
             <BlogSection 
               blogs={db.blogs} 
+              settings={db.settings}
               initialArticleId={targetArticleId}
               onClearArticle={() => setTargetArticleId(null)}
             />

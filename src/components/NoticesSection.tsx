@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { NoticeItem } from '../types';
+import { NoticeItem, SiteSettings } from '../types';
 import { PageHeader } from './PageHeader';
 import { 
   Bell, 
@@ -14,9 +14,12 @@ import {
   Copy,
   Check
 } from 'lucide-react';
+import { LaTeXContentRenderer } from './LaTeXRenderer/LaTeXContentRenderer';
+import { DocumentPDFModal, DocumentPDFData } from './PDFExport/DocumentPDFModal';
 
 interface NoticesSectionProps {
   notices: NoticeItem[];
+  settings?: SiteSettings;
   initialNoticeId?: string | null;
   onNavigate?: (tabId: string) => void;
   onClearNotice?: () => void;
@@ -24,6 +27,7 @@ interface NoticesSectionProps {
 
 export const NoticesSection: React.FC<NoticesSectionProps> = ({ 
   notices, 
+  settings,
   initialNoticeId,
   onNavigate,
   onClearNotice 
@@ -33,6 +37,7 @@ export const NoticesSection: React.FC<NoticesSectionProps> = ({
   const [activeNotice, setActiveNotice] = useState<NoticeItem | null>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [pdfData, setPdfData] = useState<DocumentPDFData | null>(null);
 
   const activeNotices = notices.filter(n => n.active);
 
@@ -253,7 +258,29 @@ export const NoticesSection: React.FC<NoticesSectionProps> = ({
                     </button>
                   </div>
 
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setPdfData({
+                          type: 'notice',
+                          title: notice.title,
+                          category: notice.category,
+                          date: notice.date,
+                          isImportant: notice.isImportant,
+                          content: notice.description,
+                          contentType: notice.contentType,
+                          fileUrl: notice.fileUrl,
+                          linkUrl: notice.linkUrl
+                        });
+                      }}
+                      className="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-emerald-50 text-slate-700 hover:text-emerald-800 text-xs font-serif-bn font-semibold transition-colors flex items-center gap-1.5 border border-slate-200 cursor-pointer"
+                      title="নোটিসটি এ৪ পিডিএফ আকারে ডাউনলোড করুন"
+                    >
+                      <Download className="w-3.5 h-3.5 text-emerald-700" />
+                      <span>পিডিএফ</span>
+                    </button>
+
                     {notice.fileUrl && (
                       <a
                         href={notice.fileUrl}
@@ -261,8 +288,8 @@ export const NoticesSection: React.FC<NoticesSectionProps> = ({
                         rel="noreferrer"
                         className="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-emerald-50 text-slate-700 hover:text-emerald-800 text-xs font-serif-bn font-semibold transition-colors flex items-center gap-1.5 border border-slate-200"
                       >
-                        <Download className="w-3.5 h-3.5" />
-                        <span>পিডিএফ ফাইল</span>
+                        <FileText className="w-3.5 h-3.5" />
+                        <span>সংযুক্ত ফাইল</span>
                       </a>
                     )}
 
@@ -288,14 +315,19 @@ export const NoticesSection: React.FC<NoticesSectionProps> = ({
       {/* Notice Detail Reader Modal */}
       {activeNotice && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-xs animate-fade-in font-serif-bn">
-          <div className="bg-white rounded-3xl max-w-xl w-full p-6 sm:p-8 shadow-2xl border border-slate-200 space-y-4">
+          <div className="bg-white rounded-3xl max-w-2xl w-full p-6 sm:p-8 shadow-2xl border border-slate-200 space-y-4 max-h-[90vh] flex flex-col">
             
-            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3 shrink-0">
               <div className="flex items-center gap-2">
                 <span className="px-3 py-1 rounded-full bg-emerald-100 text-emerald-800 text-xs font-bold">
                   {activeNotice.category}
                 </span>
                 <span className="text-xs text-slate-500 font-sans-bn">{activeNotice.date}</span>
+                {activeNotice.isImportant && (
+                  <span className="px-2 py-0.5 rounded-full bg-rose-600 text-white font-bold text-[10px]">
+                    জরুরি
+                  </span>
+                )}
               </div>
               <button
                 onClick={handleCloseNotice}
@@ -305,22 +337,45 @@ export const NoticesSection: React.FC<NoticesSectionProps> = ({
               </button>
             </div>
 
-            <h3 className="text-xl font-bold text-slate-900 leading-snug">
+            <h3 className="text-xl font-bold text-slate-900 leading-snug shrink-0">
               {activeNotice.title}
             </h3>
 
-            <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 text-sm text-slate-700 leading-relaxed font-serif-bn whitespace-pre-line max-h-80 overflow-y-auto">
-              {activeNotice.description}
+            <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 text-sm text-slate-700 leading-relaxed font-serif-bn flex-1 overflow-y-auto">
+              <LaTeXContentRenderer
+                content={activeNotice.description}
+                contentType={activeNotice.contentType}
+              />
             </div>
 
-            <div className="flex items-center justify-between gap-3 pt-2 flex-wrap">
-              <button
-                onClick={(e) => handleCopyLink(activeNotice, e)}
-                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition-colors cursor-pointer"
-              >
-                {copiedId === activeNotice.id ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
-                <span>{copiedId === activeNotice.id ? 'কপি হয়েছে' : 'লিংক কপি করুন'}</span>
-              </button>
+            <div className="flex items-center justify-between gap-3 pt-2 flex-wrap shrink-0">
+              <div className="flex items-center gap-2 flex-wrap">
+                <button
+                  onClick={(e) => handleCopyLink(activeNotice, e)}
+                  className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition-colors cursor-pointer"
+                >
+                  {copiedId === activeNotice.id ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
+                  <span>{copiedId === activeNotice.id ? 'কপি হয়েছে' : 'লিংক কপি করুন'}</span>
+                </button>
+
+                <button
+                  onClick={() => setPdfData({
+                    type: 'notice',
+                    title: activeNotice.title,
+                    category: activeNotice.category,
+                    date: activeNotice.date,
+                    isImportant: activeNotice.isImportant,
+                    content: activeNotice.description,
+                    contentType: activeNotice.contentType,
+                    fileUrl: activeNotice.fileUrl,
+                    linkUrl: activeNotice.linkUrl
+                  })}
+                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-md transition-colors cursor-pointer"
+                >
+                  <Download className="w-4 h-4" />
+                  <span>পিডিএফ ডাউনলোড</span>
+                </button>
+              </div>
 
               <div className="flex items-center gap-2">
                 {activeNotice.fileUrl && (
@@ -328,10 +383,10 @@ export const NoticesSection: React.FC<NoticesSectionProps> = ({
                     href={activeNotice.fileUrl}
                     target="_blank"
                     rel="noreferrer"
-                    className="px-4 py-2 rounded-xl bg-emerald-600 text-white font-bold text-xs flex items-center gap-1.5 shadow-md"
+                    className="px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs flex items-center gap-1.5 border border-slate-200"
                   >
-                    <Download className="w-4 h-4" />
-                    <span>ফাইল ডাউনলোড</span>
+                    <FileText className="w-4 h-4 text-emerald-700" />
+                    <span>সংযুক্ত ফাইল</span>
                   </a>
                 )}
                 <button
@@ -346,6 +401,14 @@ export const NoticesSection: React.FC<NoticesSectionProps> = ({
           </div>
         </div>
       )}
+
+      {/* PDF Generation and Download Modal */}
+      <DocumentPDFModal
+        isOpen={!!pdfData}
+        onClose={() => setPdfData(null)}
+        documentData={pdfData}
+        settings={settings}
+      />
 
       {/* Toast Notification */}
       {toastMessage && (
