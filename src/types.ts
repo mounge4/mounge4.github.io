@@ -57,7 +57,7 @@ export interface HeroSlide {
   imageUrl: string;
   videoUrl?: string; // YouTube or video URL (16:9 aspect ratio)
   ctaText: string;
-  ctaLink: string; // e.g. 'join', 'activities', 'about'
+  ctaLink: string; // e.g. 'blogs', 'notices', 'contact', 'activities', 'join', 'volunteer', 'about'
   active: boolean;
   order: number;
 }

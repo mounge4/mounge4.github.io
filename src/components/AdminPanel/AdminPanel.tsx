@@ -1448,6 +1448,23 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                         </div>
                         <h4 className="font-bold text-sm text-slate-900 line-clamp-1">{slide.title}</h4>
                         <p className="text-xs text-slate-500 font-sans-bn line-clamp-2">{slide.subtitle}</p>
+                        <div className="flex items-center gap-1.5 flex-wrap text-[11px] font-sans-bn bg-slate-50 px-2.5 py-1.5 rounded-lg border border-slate-100">
+                          <span className="font-semibold text-slate-700">বাটন:</span>
+                          <span className="text-emerald-700 font-bold">{slide.ctaText || 'নাই'}</span>
+                          <span className="text-slate-300">|</span>
+                          <span className="font-semibold text-slate-700">একশন ট্যাব:</span>
+                          <span className="px-1.5 py-0.5 rounded bg-emerald-100/80 text-emerald-800 text-[10px] font-bold font-serif-bn">
+                            {slide.ctaLink === 'blogs' ? 'ইসলামী ব্লগ ও আর্টিকেল' :
+                             slide.ctaLink === 'notices' ? 'নোটিস বোর্ড' :
+                             slide.ctaLink === 'contact' ? 'যোগাযোগ' :
+                             slide.ctaLink === 'activities' ? 'কার্যক্রমসমূহ' :
+                             slide.ctaLink === 'join' ? 'দান করুন' :
+                             slide.ctaLink === 'volunteer' ? 'স্বেচ্ছাসেবক' :
+                             slide.ctaLink === 'about' ? 'আমাদের সম্পর্কে' :
+                             slide.ctaLink === 'members' ? 'পরিষদ ও সদস্য' :
+                             slide.ctaLink === 'gallery' ? 'গ্যালারি' : (slide.ctaLink || 'কার্যক্রম')}
+                          </span>
+                        </div>
                       </div>
 
                       <div className="flex items-center justify-between pt-2 border-t border-slate-100">

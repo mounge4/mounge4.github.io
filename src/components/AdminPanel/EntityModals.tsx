@@ -191,18 +191,21 @@ export const SlideModal: React.FC<SlideModalProps> = ({ isOpen, slide, onSave, o
           </div>
 
           <div>
-            <label className="block font-bold text-slate-800 mb-1 font-serif-bn">বাটনের টার্গেট পেজ</label>
+            <label className="block font-bold text-slate-800 mb-1 font-serif-bn">বাটনের টার্গেট পেজ / একশন ট্যাব</label>
             <select
               value={formData.ctaLink}
               onChange={(e) => setFormData({ ...formData, ctaLink: e.target.value })}
               className="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm font-serif-bn focus:ring-2 focus:ring-emerald-500"
             >
               <option value="activities">কার্যক্রমসমূহ (Activities)</option>
+              <option value="blogs">ইসলামী ব্লগ ও আর্টিকেল (Blogs & Articles)</option>
+              <option value="notices">নোটিস বোর্ড (Notices)</option>
+              <option value="contact">যোগাযোগ (Contact)</option>
+              <option value="about">আমাদের সম্পর্কে (About Us)</option>
               <option value="join">দান করুন (Donate)</option>
               <option value="volunteer">স্বেচ্ছাসেবক (Volunteer)</option>
-              <option value="notices">নোটিস বোর্ড (Notices)</option>
-              <option value="about">আমাদের সম্পর্কে (About Us)</option>
-              <option value="contact">যোগাযোগ (Contact)</option>
+              <option value="members">পরিষদ ও সদস্য (Members)</option>
+              <option value="gallery">ফটো ও ভিডিও গ্যালারি (Gallery)</option>
             </select>
           </div>
         </div>

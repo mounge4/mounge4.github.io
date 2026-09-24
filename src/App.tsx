@@ -338,12 +338,19 @@ export default function App() {
       case 'blog':
       case 'blogs':
         return (
-          <div className="py-8 space-y-8 animate-fade-in">
+          <div className="py-2 space-y-8 animate-fade-in">
             <BlogSection 
               blogs={db.blogs} 
               settings={db.settings}
               initialArticleId={targetArticleId}
-              onClearArticle={() => setTargetArticleId(null)}
+              onClearArticle={() => {
+                setTargetArticleId(null);
+                try {
+                  const cleanUrl = `${window.location.pathname}?tab=blog`;
+                  window.history.pushState(null, '', cleanUrl);
+                } catch (e) {}
+              }}
+              onNavigate={handleNavigate}
             />
           </div>
         );
@@ -431,6 +438,17 @@ export default function App() {
               settings={db.settings}
               initialArticleId={targetArticleId}
               onClearArticle={() => setTargetArticleId(null)}
+              onNavigate={handleNavigate}
+              onOpenArticleDetail={(blog) => {
+                setActiveTab('blogs');
+                setTargetArticleId(blog.slug || blog.id);
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+                try {
+                  const shareUrl = `${window.location.pathname}?tab=blog&article=${encodeURIComponent(blog.slug || blog.id)}`;
+                  window.history.pushState(null, '', shareUrl);
+                } catch (e) {}
+              }}
+              isHomePreview={true}
             />
 
             {/* 8. Gallery Highlights */}

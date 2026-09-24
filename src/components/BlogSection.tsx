@@ -1,20 +1,22 @@
 import React, { useState, useEffect } from 'react';
 import { BlogPost, SiteSettings } from '../types';
 import { 
-  Sparkles, 
   Calendar, 
   Clock, 
   Copy, 
   Check, 
-  X,
-  MessageCircle,
-  Play,
-  ChevronLeft,
-  ChevronRight,
-  BookOpen,
-  User,
-  Search,
-  Download
+  ChevronLeft, 
+  ChevronRight, 
+  BookOpen, 
+  User, 
+  Search, 
+  Download,
+  ArrowLeft,
+  ArrowRight,
+  Home,
+  Share2,
+  ExternalLink,
+  Sparkles
 } from 'lucide-react';
 import { formatDriveImageUrl, LOADING_PLACEHOLDER_IMAGE } from '../utils/imageHelper';
 import { getYouTubeEmbedUrl } from '../utils/mediaHelper';
@@ -26,13 +28,19 @@ interface BlogSectionProps {
   settings?: SiteSettings;
   initialArticleId?: string | null;
   onClearArticle?: () => void;
+  onNavigate?: (tabId: string) => void;
+  onOpenArticleDetail?: (blog: BlogPost) => void;
+  isHomePreview?: boolean;
 }
 
 export const BlogSection: React.FC<BlogSectionProps> = ({ 
   blogs,
   settings,
   initialArticleId,
-  onClearArticle
+  onClearArticle,
+  onNavigate,
+  onOpenArticleDetail,
+  isHomePreview = false
 }) => {
   const [selectedBlog, setSelectedBlog] = useState<BlogPost | null>(null);
   const [currentSlideIndex, setCurrentSlideIndex] = useState<number>(0);
@@ -87,7 +95,7 @@ export const BlogSection: React.FC<BlogSectionProps> = ({
     if (featuredBlogs.length <= 1) return;
     const timer = setInterval(() => {
       setCurrentSlideIndex(prev => (prev + 1) % featuredBlogs.length);
-    }, 5000);
+    }, 5500);
     return () => clearInterval(timer);
   }, [featuredBlogs.length]);
 
@@ -108,19 +116,26 @@ export const BlogSection: React.FC<BlogSectionProps> = ({
   };
 
   const handleOpenBlog = (blog: BlogPost) => {
+    if (isHomePreview && onOpenArticleDetail) {
+      onOpenArticleDetail(blog);
+      return;
+    }
+
     setSelectedBlog(blog);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
     try {
       const shareUrl = `${window.location.pathname}?tab=blog&article=${encodeURIComponent(blog.slug || blog.id)}#blog-${encodeURIComponent(blog.slug || blog.id)}`;
-      window.history.replaceState(null, '', shareUrl);
+      window.history.pushState(null, '', shareUrl);
     } catch (e) {}
   };
 
   const handleCloseBlog = () => {
     setSelectedBlog(null);
     onClearArticle?.();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
     try {
       const cleanUrl = `${window.location.pathname}?tab=blog`;
-      window.history.replaceState(null, '', cleanUrl);
+      window.history.pushState(null, '', cleanUrl);
     } catch (e) {}
   };
 
@@ -157,14 +172,378 @@ export const BlogSection: React.FC<BlogSectionProps> = ({
 
   const currentFeatured = featuredBlogs[currentSlideIndex] || featuredBlogs[0];
 
+  // -------------------------------------------------------------
+  // DEDICATED FULL-PAGE ARTICLE READER VIEW (NOT A POPUP/MODAL)
+  // -------------------------------------------------------------
+  if (selectedBlog) {
+    const relatedBlogs = blogs
+      .filter(b => b.id !== selectedBlog.id)
+      .slice(0, 6);
+
+    return (
+      <div className="min-h-screen py-6 sm:py-10 bg-slate-50/70 animate-fade-in font-serif-bn">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+          
+          {/* 1. Breadcrumb Navigation */}
+          <nav className="flex items-center gap-2 text-xs text-slate-500 font-sans-bn mb-5 flex-wrap">
+            <button
+              onClick={() => onNavigate?.('home')}
+              className="hover:text-emerald-700 flex items-center gap-1 cursor-pointer transition-colors"
+            >
+              <Home className="w-3.5 h-3.5" />
+              <span>হোম</span>
+            </button>
+            <span className="text-slate-300">/</span>
+            <button
+              onClick={handleCloseBlog}
+              className="hover:text-emerald-700 font-medium cursor-pointer transition-colors"
+            >
+              ইসলামী ব্লগ ও আর্টিকেল
+            </button>
+            <span className="text-slate-300">/</span>
+            <span className="text-slate-700 font-medium truncate max-w-[200px] sm:max-w-md">
+              {selectedBlog.title}
+            </span>
+          </nav>
+
+          {/* 2. Top Action Toolbar */}
+          <div className="bg-white rounded-2xl p-3.5 sm:p-4 border border-slate-200 shadow-sm mb-6 flex flex-wrap items-center justify-between gap-3">
+            <div className="flex items-center gap-2.5 flex-wrap">
+              {/* ফিরে যান Button */}
+              <button
+                onClick={handleCloseBlog}
+                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs sm:text-sm font-bold font-serif-bn transition-all shadow-sm cursor-pointer hover:scale-102 active:scale-98"
+                title="সকল ব্লগ ও আর্টিকেলের মূল তালিকায় ফিরে যান"
+              >
+                <ArrowLeft className="w-4 h-4" />
+                <span>ফিরে যান</span>
+              </button>
+
+              {/* আরও পড়ুন Button */}
+              <button
+                onClick={() => {
+                  document.getElementById('more-articles-section')?.scrollIntoView({ behavior: 'smooth' });
+                }}
+                className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 text-xs sm:text-sm font-bold font-serif-bn transition-all cursor-pointer hover:scale-102"
+                title="সম্পর্কিত আরও অন্যান্য আর্টিকেল পড়ুন"
+              >
+                <BookOpen className="w-4 h-4 text-emerald-700" />
+                <span>আরও পড়ুন ↓</span>
+              </button>
+            </div>
+
+            {/* Right Action Tools: PDF, Copy Link, Share */}
+            <div className="flex items-center gap-2 flex-wrap">
+              <button
+                onClick={() => setPdfData({
+                  type: 'blog',
+                  title: selectedBlog.title,
+                  category: selectedBlog.category,
+                  date: selectedBlog.date,
+                  author: selectedBlog.author,
+                  authorRole: selectedBlog.authorRole,
+                  readTime: selectedBlog.readTime,
+                  content: selectedBlog.content,
+                  contentType: selectedBlog.contentType,
+                  fileUrl: selectedBlog.imageUrl,
+                  linkUrl: selectedBlog.videoUrl
+                })}
+                className="inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold font-serif-bn transition-colors cursor-pointer shadow-xs"
+                title="আর্টিকেলটি পিডিএফ আকারে ডাউনলোড করুন"
+              >
+                <Download className="w-3.5 h-3.5" />
+                <span>পিডিএফ ডাউনলোড</span>
+              </button>
+
+              <button
+                onClick={() => handleCopyLink(selectedBlog)}
+                className="inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold font-serif-bn transition-colors cursor-pointer"
+                title="আর্টিকেলের লিংক কপি করুন"
+              >
+                {copiedId === selectedBlog.id ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
+                <span>{copiedId === selectedBlog.id ? 'কপি হয়েছে' : 'লিংক কপি'}</span>
+              </button>
+            </div>
+          </div>
+
+          {/* 3. Main Full Article Card */}
+          <article className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden p-6 sm:p-10 space-y-6">
+            
+            {/* Category, Date & Meta info */}
+            <div className="flex items-center gap-3 flex-wrap text-xs sm:text-sm text-slate-500 font-sans-bn pb-3 border-b border-slate-100">
+              <span className="px-3.5 py-1 rounded-full bg-emerald-100 text-emerald-900 font-bold font-serif-bn text-xs">
+                {selectedBlog.category}
+              </span>
+              <span className="text-slate-300">•</span>
+              <span className="flex items-center gap-1">
+                <Calendar className="w-4 h-4 text-emerald-600" />
+                {selectedBlog.date}
+              </span>
+              <span className="text-slate-300">•</span>
+              <span className="flex items-center gap-1">
+                <Clock className="w-4 h-4 text-emerald-600" />
+                {selectedBlog.readTime}
+              </span>
+            </div>
+
+            {/* Article Headline */}
+            <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-extrabold text-slate-900 leading-snug sm:leading-tight font-serif-bn">
+              {selectedBlog.title}
+            </h1>
+
+            {/* Author Profile Highlight */}
+            <div className="flex items-center gap-3.5 p-4 rounded-2xl bg-emerald-50/60 border border-emerald-100">
+              <div className="w-11 h-11 rounded-full bg-emerald-700 text-white flex items-center justify-center font-bold font-serif-bn text-base shadow-xs shrink-0">
+                {selectedBlog.author ? selectedBlog.author.charAt(0) : 'দ'}
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className="font-bold text-slate-900 font-serif-bn text-sm sm:text-base">
+                  {selectedBlog.author}
+                </div>
+                {selectedBlog.authorRole && (
+                  <div className="text-xs text-emerald-800 font-sans-bn font-medium">
+                    {selectedBlog.authorRole}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Video or Image Media */}
+            {selectedBlog.videoUrl ? (
+              <div className="rounded-2xl overflow-hidden aspect-[16/9] bg-black shadow-md border border-slate-200">
+                <iframe
+                  src={getYouTubeEmbedUrl(selectedBlog.videoUrl)}
+                  title={selectedBlog.title}
+                  className="w-full h-full border-0"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                />
+              </div>
+            ) : selectedBlog.imageUrl ? (
+              <div className="rounded-2xl overflow-hidden aspect-[16/9] max-h-[460px] bg-slate-900 shadow-md border border-slate-200">
+                <img
+                  src={formatDriveImageUrl(selectedBlog.imageUrl)}
+                  alt={selectedBlog.title}
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).src = LOADING_PLACEHOLDER_IMAGE;
+                  }}
+                />
+              </div>
+            ) : null}
+
+            {/* Excerpt Block (if exists) */}
+            {selectedBlog.excerpt && (
+              <div className="p-4 sm:p-5 rounded-2xl bg-slate-50 border-l-4 border-emerald-600 text-slate-700 italic font-serif-bn text-sm sm:text-base leading-relaxed">
+                "{selectedBlog.excerpt}"
+              </div>
+            )}
+
+            {/* Content Body */}
+            <div className="pt-4 border-t border-slate-100">
+              <LaTeXContentRenderer
+                content={selectedBlog.content}
+                contentType={selectedBlog.contentType}
+                className="text-base sm:text-lg leading-relaxed text-slate-800 space-y-4 font-serif-bn"
+              />
+            </div>
+
+            {/* Tags */}
+            {selectedBlog.tags && selectedBlog.tags.length > 0 && (
+              <div className="pt-6 border-t border-slate-100 flex items-center gap-2 flex-wrap">
+                <span className="text-xs font-bold text-slate-500 font-sans-bn">ট্যাগসমূহ:</span>
+                {selectedBlog.tags.map((tag, tIdx) => (
+                  <span
+                    key={tIdx}
+                    className="px-3 py-1 rounded-lg bg-slate-100 text-slate-700 text-xs font-medium font-serif-bn"
+                  >
+                    #{tag}
+                  </span>
+                ))}
+              </div>
+            )}
+
+            {/* 4. Article Bottom Action Buttons */}
+            <div className="pt-8 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-4">
+              <div className="flex items-center gap-3 flex-wrap w-full sm:w-auto">
+                <button
+                  onClick={handleCloseBlog}
+                  className="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold font-serif-bn text-sm shadow-md transition-all cursor-pointer hover:scale-102"
+                >
+                  <ArrowLeft className="w-4 h-4" />
+                  <span>ফিরে যান (সকল আর্টিকেল)</span>
+                </button>
+
+                <button
+                  onClick={() => {
+                    document.getElementById('more-articles-section')?.scrollIntoView({ behavior: 'smooth' });
+                  }}
+                  className="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold font-serif-bn text-sm shadow-md transition-all cursor-pointer hover:scale-102"
+                >
+                  <BookOpen className="w-4 h-4" />
+                  <span>আরও পড়ুন ↓</span>
+                </button>
+              </div>
+
+              <div className="flex items-center gap-2 shrink-0">
+                <button
+                  onClick={() => handleCopyLink(selectedBlog)}
+                  className="inline-flex items-center gap-1.5 px-4 py-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition-colors cursor-pointer"
+                >
+                  {copiedId === selectedBlog.id ? <Check className="w-4 h-4 text-emerald-600" /> : <Copy className="w-4 h-4" />}
+                  <span>{copiedId === selectedBlog.id ? 'কপি হয়েছে' : 'লিংক শেয়ার'}</span>
+                </button>
+                <button
+                  onClick={() => setPdfData({
+                    type: 'blog',
+                    title: selectedBlog.title,
+                    category: selectedBlog.category,
+                    date: selectedBlog.date,
+                    author: selectedBlog.author,
+                    authorRole: selectedBlog.authorRole,
+                    readTime: selectedBlog.readTime,
+                    content: selectedBlog.content,
+                    contentType: selectedBlog.contentType,
+                    fileUrl: selectedBlog.imageUrl,
+                    linkUrl: selectedBlog.videoUrl
+                  })}
+                  className="inline-flex items-center gap-1.5 px-4 py-3 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 text-xs font-bold transition-colors cursor-pointer"
+                >
+                  <Download className="w-4 h-4" />
+                  <span>পিডিএফ ডাউনলোড</span>
+                </button>
+              </div>
+            </div>
+
+          </article>
+
+          {/* 5. "আরও পড়ুন" (More Articles) Grid Section */}
+          <div id="more-articles-section" className="mt-12 pt-8 border-t border-slate-200">
+            <div className="flex items-center justify-between pb-4 mb-6 border-b border-slate-200 flex-wrap gap-3">
+              <div>
+                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-100 text-emerald-900 text-xs font-bold mb-2">
+                  <BookOpen className="w-3.5 h-3.5 text-emerald-700" />
+                  <span>দ্বীনি দিকনির্দেশনা ও জ্ঞান</span>
+                </div>
+                <h3 className="text-xl sm:text-2xl font-extrabold text-slate-900 font-serif-bn">
+                  আরও পড়ুন : সম্পর্কিত অন্যান্য ইসলামিক আর্টিকেল
+                </h3>
+              </div>
+              <button
+                onClick={handleCloseBlog}
+                className="text-xs sm:text-sm font-bold text-emerald-700 hover:text-emerald-800 font-serif-bn cursor-pointer flex items-center gap-1"
+              >
+                <span>সকল আর্টিকেল তালিকা</span>
+                <ChevronRight className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {relatedBlogs.map((b) => (
+                <div
+                  key={b.id}
+                  onClick={() => handleOpenBlog(b)}
+                  className="bg-white rounded-2xl border border-slate-200 shadow-xs hover:shadow-md transition-all overflow-hidden flex flex-col justify-between cursor-pointer group hover:-translate-y-1"
+                >
+                  <div>
+                    <div className="relative aspect-[16/10] bg-slate-100 overflow-hidden">
+                      <img
+                        src={formatDriveImageUrl(b.imageUrl)}
+                        alt={b.title}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).src = LOADING_PLACEHOLDER_IMAGE;
+                        }}
+                      />
+                      <span className="absolute top-2.5 left-2.5 px-2.5 py-0.5 rounded-md bg-emerald-800 text-white text-[10px] font-bold font-serif-bn">
+                        {b.category}
+                      </span>
+                    </div>
+
+                    <div className="p-4 space-y-2">
+                      <div className="flex items-center gap-2 text-[11px] text-slate-400 font-sans-bn">
+                        <span className="flex items-center gap-1">
+                          <Calendar className="w-3 h-3 text-emerald-600" />
+                          {b.date}
+                        </span>
+                        <span>•</span>
+                        <span className="flex items-center gap-1">
+                          <Clock className="w-3 h-3 text-emerald-600" />
+                          {b.readTime}
+                        </span>
+                      </div>
+
+                      <h4 className="font-bold text-sm sm:text-base text-slate-900 group-hover:text-emerald-700 transition-colors line-clamp-2 leading-snug font-serif-bn">
+                        {b.title}
+                      </h4>
+
+                      <p className="text-xs text-slate-500 font-sans-bn line-clamp-2 leading-relaxed">
+                        {b.excerpt || b.content.slice(0, 100)}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="p-4 pt-0 flex items-center justify-between border-t border-slate-100 mt-2">
+                    <span className="text-[11px] text-slate-600 font-serif-bn truncate max-w-[120px]">
+                      {b.author}
+                    </span>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleOpenBlog(b);
+                      }}
+                      className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-emerald-50 text-emerald-800 group-hover:bg-emerald-700 group-hover:text-white text-xs font-bold font-serif-bn transition-colors"
+                    >
+                      <span>বিস্তারিত পড়ুন</span>
+                      <ArrowRight className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="mt-8 text-center">
+              <button
+                onClick={handleCloseBlog}
+                className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs sm:text-sm font-bold font-serif-bn transition-colors cursor-pointer"
+              >
+                <ArrowLeft className="w-4 h-4" />
+                <span>সকল ইসলামী ব্লগ ও আর্টিকেলের মূল তালিকায় ফিরে যান</span>
+              </button>
+            </div>
+          </div>
+
+        </div>
+
+        {/* PDF Modal */}
+        <DocumentPDFModal
+          isOpen={!!pdfData}
+          onClose={() => setPdfData(null)}
+          documentData={pdfData}
+          settings={settings}
+        />
+
+        {/* Toast Notification */}
+        {toastMessage && (
+          <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 px-5 py-3 rounded-2xl bg-slate-900 text-white text-xs sm:text-sm font-serif-bn shadow-2xl border border-slate-700 animate-bounce">
+            {toastMessage}
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  // -------------------------------------------------------------
+  // MAIN BLOG CATALOG VIEW (WHEN NO ARTICLE IS SELECTED)
+  // -------------------------------------------------------------
   return (
-    <section id="blog" className="py-12 sm:py-16 bg-slate-50/50">
+    <section id="blog" className="py-10 sm:py-14 bg-slate-50/50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
         {/* Section Header */}
         <div className="text-center max-w-3xl mx-auto mb-10">
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 text-emerald-800 text-xs font-bold font-serif-bn mb-3 border border-emerald-200">
-            
+            <Sparkles className="w-3.5 h-3.5 text-emerald-600" />
             <span>দ্বীনি জ্ঞান ও মানবিক ভাবনা</span>
           </div>
           <h2 className="text-2xl sm:text-4xl font-extrabold font-serif-bn text-slate-900 tracking-tight mb-3">
@@ -177,7 +556,7 @@ export const BlogSection: React.FC<BlogSectionProps> = ({
 
         {/* 1. TOP AUTO-CHANGING SLIDER */}
         {currentFeatured && (
-          <div className="mb-12 relative rounded-3xl overflow-hidden shadow-xl bg-slate-900 border border-slate-800">
+          <div className="mb-10 relative rounded-3xl overflow-hidden shadow-xl bg-slate-900 border border-slate-800">
             <div className="relative aspect-[21/9] sm:aspect-[24/9] min-h-[280px] w-full flex items-end">
               <img
                 src={formatDriveImageUrl(currentFeatured.imageUrl)}
@@ -213,13 +592,13 @@ export const BlogSection: React.FC<BlogSectionProps> = ({
                   {currentFeatured.excerpt || currentFeatured.content.slice(0, 160)}
                 </p>
 
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-3 flex-wrap">
                   <button
                     onClick={() => handleOpenBlog(currentFeatured)}
                     className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs sm:text-sm font-bold transition-all shadow-md cursor-pointer hover:scale-102"
                   >
                     <BookOpen className="w-4 h-4" />
-                    <span>সম্পূর্ণ পড়ুন</span>
+                    <span>বিস্তারিত পড়ুন →</span>
                   </button>
 
                   <button
@@ -320,7 +699,7 @@ export const BlogSection: React.FC<BlogSectionProps> = ({
               <span>সকল আর্টিকেলের তালিকা ({filteredBlogs.length}টি)</span>
             </h3>
             <span className="text-xs text-slate-500 font-sans-bn">
-              যেকোনো শিরোনামে ক্লিক করে বিস্তারিত পড়ুন
+              যেকোনো শিরোনামে ক্লিক করে বিস্তারিত নতুন পেজে পড়ুন
             </span>
           </div>
 
@@ -401,9 +780,10 @@ export const BlogSection: React.FC<BlogSectionProps> = ({
                         e.stopPropagation();
                         handleOpenBlog(blog);
                       }}
-                      className="px-3 py-1.5 rounded-xl bg-slate-100 group-hover:bg-emerald-700 group-hover:text-white text-slate-700 text-xs font-bold font-serif-bn transition-all shadow-2xs cursor-pointer"
+                      className="px-3.5 py-1.5 rounded-xl bg-slate-100 group-hover:bg-emerald-700 group-hover:text-white text-slate-700 text-xs font-bold font-serif-bn transition-all shadow-2xs cursor-pointer flex items-center gap-1"
                     >
-                      বিস্তারিত পড়ুন →
+                      <span>বিস্তারিত পড়ুন</span>
+                      <ArrowRight className="w-3.5 h-3.5" />
                     </button>
                   </div>
                 </div>
@@ -412,146 +792,20 @@ export const BlogSection: React.FC<BlogSectionProps> = ({
           )}
         </div>
 
-      </div>
-
-      {/* 4. FULL BLOG READER MODAL */}
-      {selectedBlog && (
-        <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-950/80 backdrop-blur-xs flex items-center justify-center p-4 sm:p-6 animate-fade-in font-serif-bn">
-          <div className="bg-white rounded-3xl max-w-3xl w-full max-h-[90vh] overflow-y-auto shadow-2xl border border-slate-200 flex flex-col">
-            
-            {/* Modal Header Media */}
-            <div className="relative aspect-[16/9] w-full bg-slate-900 shrink-0">
-              <img
-                src={formatDriveImageUrl(selectedBlog.imageUrl)}
-                alt={selectedBlog.title}
-                className="w-full h-full object-cover"
-                onError={(e) => {
-                  (e.target as HTMLImageElement).src = LOADING_PLACEHOLDER_IMAGE;
-                }}
-              />
-              <div className="absolute top-4 right-4 flex items-center gap-2">
-                <button
-                  onClick={() => setPdfData({
-                    type: 'blog',
-                    title: selectedBlog.title,
-                    category: selectedBlog.category,
-                    date: selectedBlog.date,
-                    author: selectedBlog.author,
-                    authorRole: selectedBlog.authorRole,
-                    readTime: selectedBlog.readTime,
-                    content: selectedBlog.content,
-                    contentType: selectedBlog.contentType,
-                    fileUrl: selectedBlog.imageUrl,
-                    linkUrl: selectedBlog.videoUrl
-                  })}
-                  className="inline-flex items-center gap-1.5 px-3 py-2 rounded-full bg-emerald-600/90 hover:bg-emerald-600 text-white backdrop-blur-xs text-xs font-bold font-serif-bn transition-colors cursor-pointer shadow-md"
-                  title="আর্টিকেলটি পিডিএফ আকারে ডাউনলোড করুন"
-                >
-                  <Download className="w-4 h-4" />
-                  <span className="hidden sm:inline">পিডিএফ ডাউনলোড</span>
-                </button>
-                <button
-                  onClick={handleCloseBlog}
-                  className="p-2 rounded-full bg-black/60 hover:bg-black/90 text-white backdrop-blur-xs transition-colors cursor-pointer"
-                  title="বন্ধ করুন"
-                >
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
-            </div>
-
-            {/* Modal Body */}
-            <div className="p-6 sm:p-8 space-y-5">
-              <div className="flex items-center gap-2 flex-wrap text-xs text-slate-500 font-sans-bn">
-                <span className="px-3 py-1 rounded-full bg-emerald-100 text-emerald-800 font-bold font-serif-bn">
-                  {selectedBlog.category}
-                </span>
-                <span>•</span>
-                <span className="flex items-center gap-1">
-                  <Calendar className="w-3.5 h-3.5" />
-                  {selectedBlog.date}
-                </span>
-                <span>•</span>
-                <span className="flex items-center gap-1">
-                  <Clock className="w-3.5 h-3.5" />
-                  {selectedBlog.readTime}
-                </span>
-                <span>•</span>
-                <span className="flex items-center gap-1">
-                  <User className="w-3.5 h-3.5" />
-                  {selectedBlog.author} {selectedBlog.authorRole ? `(${selectedBlog.authorRole})` : ''}
-                </span>
-              </div>
-
-              <h2 className="text-xl sm:text-3xl font-extrabold text-slate-900 leading-snug">
-                {selectedBlog.title}
-              </h2>
-
-              {/* YouTube video if available */}
-              {selectedBlog.videoUrl && (
-                <div className="my-4 rounded-2xl overflow-hidden aspect-[16/9] bg-black shadow-lg">
-                  <iframe
-                    src={getYouTubeEmbedUrl(selectedBlog.videoUrl)}
-                    title={selectedBlog.title}
-                    className="w-full h-full border-0"
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                    allowFullScreen
-                  />
-                </div>
-              )}
-
-              <div className="border-t border-slate-100 pt-5">
-                <LaTeXContentRenderer
-                  content={selectedBlog.content}
-                  contentType={selectedBlog.contentType}
-                  className="text-sm sm:text-base leading-relaxed text-slate-800"
-                />
-              </div>
-
-              {/* Social Share & Link copy & PDF Download */}
-              <div className="pt-6 border-t border-slate-200 flex items-center justify-between flex-wrap gap-3">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <button
-                    onClick={() => handleCopyLink(selectedBlog)}
-                    className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition-colors cursor-pointer"
-                  >
-                    {copiedId === selectedBlog.id ? <Check className="w-4 h-4 text-emerald-600" /> : <Copy className="w-4 h-4" />}
-                    <span>{copiedId === selectedBlog.id ? 'কপি হয়েছে' : 'লিংক কপি করুন'}</span>
-                  </button>
-
-                  <button
-                    onClick={() => setPdfData({
-                      type: 'blog',
-                      title: selectedBlog.title,
-                      category: selectedBlog.category,
-                      date: selectedBlog.date,
-                      author: selectedBlog.author,
-                      authorRole: selectedBlog.authorRole,
-                      readTime: selectedBlog.readTime,
-                      content: selectedBlog.content,
-                      contentType: selectedBlog.contentType,
-                      fileUrl: selectedBlog.imageUrl,
-                      linkUrl: selectedBlog.videoUrl
-                    })}
-                    className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition-colors cursor-pointer shadow-xs"
-                  >
-                    <Download className="w-4 h-4" />
-                    <span>পিডিএফ ডাউনলোড</span>
-                  </button>
-                </div>
-
-                <button
-                  onClick={handleCloseBlog}
-                  className="px-5 py-2 rounded-xl bg-slate-900 text-white text-xs font-bold hover:bg-slate-800 transition-colors cursor-pointer"
-                >
-                  বন্ধ করুন
-                </button>
-              </div>
-            </div>
-
+        {/* If Home Preview: Button to explore all blogs */}
+        {isHomePreview && onNavigate && (
+          <div className="mt-8 text-center">
+            <button
+              onClick={() => onNavigate('blogs')}
+              className="inline-flex items-center gap-2 px-6 py-3 rounded-2xl bg-emerald-700 hover:bg-emerald-600 text-white font-bold font-serif-bn text-sm shadow-md transition-all cursor-pointer hover:scale-102"
+            >
+              <span>সকল ইসলামী ব্লগ ও আর্টিকেল তালিকা দেখুন</span>
+              <ArrowRight className="w-4 h-4" />
+            </button>
           </div>
-        </div>
-      )}
+        )}
+
+      </div>
 
       {/* PDF Generation and Download Modal */}
       <DocumentPDFModal
