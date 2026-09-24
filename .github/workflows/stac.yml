@@ -1,4 +1,4 @@
-# Build and Deploy Workflow for GitHub Pages
+# GitHub Pages deployment for the existing Vite project
 name: Deploy to GitHub Pages
 
 on:
@@ -25,11 +25,11 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
-          cache: 'npm'
+          node-version: 22
+          cache: npm
 
       - name: Install dependencies
-        run: npm ci
+        run: npm install
 
       - name: Build project with Vite
         run: npm run build
@@ -38,9 +38,9 @@ jobs:
         uses: actions/configure-pages@v5
 
       - name: Upload built artifact
-        uses: actions/upload-pages-artifact@v3
+        uses: actions/upload-pages-artifact@v4
         with:
-          path: 'dist'
+          path: dist
 
   deploy:
     needs: build
@@ -51,4 +51,4 @@ jobs:
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v5
+        uses: actions/deploy-pages@v4
