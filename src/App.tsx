@@ -302,8 +302,8 @@ export default function App() {
             <div className="relative h-28 w-28 overflow-hidden rounded-full border-4 border-emerald-600 bg-white p-1 shadow-xl">
               <img
                 src="https://lh3.googleusercontent.com/d/1Zzr8jDb97O_ChO4ma1i2aUOEwc3xbJyt"
-                alt="প্রতিষ্ঠানের লোগো"
-                className="h-full w-full rounded-full object-cover"
+                alt="SPDC"
+                className="h-full w-full rounded-full object-cover items-center justify-center"
               />
             </div>
           </div>
