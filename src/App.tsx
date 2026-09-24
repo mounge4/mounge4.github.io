@@ -24,6 +24,7 @@ export default function App() {
   const [activeTab, setActiveTab] = useState<string>('home');
   const [isAdminOpen, setIsAdminOpen] = useState<boolean>(false);
   const [isSyncing, setIsSyncing] = useState<boolean>(false);
+  const [isInitialLoading, setIsInitialLoading] = useState<boolean>(true);
   const [toastMessage, setToastMessage] = useState<{ text: string; type: 'success' | 'error' | 'info' } | null>(null);
   const [selectedDonationProject, setSelectedDonationProject] = useState<string>('সাধারণ সদকা ও যাকাত তহবিল');
   const [targetArticleId, setTargetArticleId] = useState<string | null>(null);
@@ -137,12 +138,37 @@ export default function App() {
     }
   }, [db.settings.googleSheetUrl, db.settings.scriptUrl]);
 
-  // Initial auto sync on load if URL present
+  // Initial auto sync on load.
+  // Keep the loading screen visible for at least 5 seconds so the default
+  // local data is never briefly shown before the Google Sheets data arrives.
   useEffect(() => {
-    const scriptUrl = db.settings.googleSheetUrl || db.settings.scriptUrl;
-    if (scriptUrl) {
-      triggerSync(false);
-    }
+    let cancelled = false;
+
+    const runInitialLoad = async () => {
+      const scriptUrl = db.settings.googleSheetUrl || db.settings.scriptUrl;
+      const minimumLoadingTime = new Promise<void>((resolve) => {
+        window.setTimeout(resolve, 5000);
+      });
+
+      try {
+        await Promise.all([
+          scriptUrl ? triggerSync(false) : Promise.resolve(),
+          minimumLoadingTime
+        ]);
+      } catch (error) {
+        console.error('Initial API sync error:', error);
+      } finally {
+        if (!cancelled) {
+          setIsInitialLoading(false);
+        }
+      }
+    };
+
+    runInitialLoad();
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   // Periodic background auto-sync if configured
@@ -259,6 +285,42 @@ export default function App() {
     setSelectedDonationProject(projectTitle);
     handleNavigate('join');
   };
+
+  // Initial loading interface: shown only on a fresh page load while the
+  // first API sync is performed. The rest of the website remains unchanged.
+  if (isInitialLoading) {
+    return (
+      <div
+        className="fixed inset-0 z-[9999] flex min-h-screen items-center justify-center bg-white"
+        role="status"
+        aria-live="polite"
+        aria-label="লোডিং হচ্ছে"
+      >
+        <div className="flex w-full max-w-sm flex-col items-center px-6 text-center">
+          <div className="relative mb-6">
+            <div className="absolute inset-0 rounded-full bg-emerald-100 blur-xl animate-pulse" />
+            <div className="relative h-28 w-28 overflow-hidden rounded-full border-4 border-emerald-600 bg-white p-1 shadow-xl">
+              <img
+                src="https://lh3.googleusercontent.com/d/1Zzr8jDb97O_ChO4ma1i2aUOEwc3xbJyt/view?usp=drivesdk"
+                alt="প্রতিষ্ঠানের লোগো"
+                className="h-full w-full rounded-full object-cover"
+              />
+            </div>
+          </div>
+
+          <h1 className="font-serif-bn text-2xl font-bold text-emerald-900">
+            লোডিং হচ্ছে
+          </h1>
+
+          <div className="mt-4 flex items-center gap-1.5" aria-hidden="true">
+            <span className="h-2 w-2 rounded-full bg-emerald-600 animate-bounce [animation-delay:-0.3s]" />
+            <span className="h-2 w-2 rounded-full bg-emerald-600 animate-bounce [animation-delay:-0.15s]" />
+            <span className="h-2 w-2 rounded-full bg-emerald-600 animate-bounce" />
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   // If Admin Panel is requested, show full screen admin view
   if (isAdminOpen) {
