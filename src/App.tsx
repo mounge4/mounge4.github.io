@@ -301,7 +301,7 @@ export default function App() {
             <div className="absolute inset-0 rounded-full bg-emerald-100 blur-xl animate-pulse" />
             <div className="relative h-28 w-28 overflow-hidden rounded-full border-4 border-emerald-600 bg-white p-1 shadow-xl">
               <img
-                src="https://lh3.googleusercontent.com/d/1Zzr8jDb97O_ChO4ma1i2aUOEwc3xbJyt/view?usp=drivesdk"
+                src="https://lh3.googleusercontent.com/d/1Zzr8jDb97O_ChO4ma1i2aUOEwc3xbJyt"
                 alt="প্রতিষ্ঠানের লোগো"
                 className="h-full w-full rounded-full object-cover"
               />
