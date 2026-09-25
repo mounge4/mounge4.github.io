@@ -10,6 +10,14 @@
   </a>
 </p>
 
+<p align="center">
+  <a href="https://www.facebook.com/SPDawahcommunity"><img src="https://img.shields.io/badge/Facebook-1877F2?style=for-the-badge&logo=facebook&logoColor=white" alt="Facebook"></a>
+  <a href="https://youtube.com/@stationparadawahcommunity"><img src="https://img.shields.io/badge/YouTube-FF0000?style=for-the-badge&logo=youtube&logoColor=white" alt="YouTube"></a>
+  <a href="https://whatsapp.com/channel/0029Vb7xZhVCsU9KjUGkSG20"><img src="https://img.shields.io/badge/WhatsApp_Channel-25D366?style=for-the-badge&logo=whatsapp&logoColor=white" alt="WhatsApp Channel"></a>
+  <a href="https://t.me/SPdawahcommunity"><img src="https://img.shields.io/badge/Telegram-26A5E4?style=for-the-badge&logo=telegram&logoColor=white" alt="Telegram"></a>
+  <a href="mailto:support.spdc@gmail.com"><img src="https://img.shields.io/badge/Email-support.spdc%40gmail.com-D14836?style=for-the-badge&logo=gmail&logoColor=white" alt="Email"></a>
+</p>
+
 ---
 
 ## 🌙 About SPDC
@@ -172,9 +180,17 @@ Website-টি বিভিন্ন ধরনের device-এর জন্য 
 
 **Station Para Dawah Community — SPDC**
 
-📧 **Email:** stationparadawahcommunity@gmail.com
+📧 **Email:** support.spdc@gmail.com
 
 🌐 **Website:** https://spdc-info.github.io/
+
+### 🌐 Connect With SPDC
+
+- 🔵 **Facebook:** https://www.facebook.com/SPDawahcommunity
+- 🔴 **YouTube:** https://youtube.com/@stationparadawahcommunity
+- 🟢 **WhatsApp Channel:** https://whatsapp.com/channel/0029Vb7xZhVCsU9KjUGkSG20
+- 🔷 **Telegram:** https://t.me/SPdawahcommunity
+- 📧 **Email:** support.spdc@gmail.com
 
 ---
 
