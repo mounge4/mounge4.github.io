@@ -1,7 +1,7 @@
 # 🕌 Station Para Dawah Community — SPDC
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/spdc-info/spdc-info.github.io/main/assets/spdc-profile-ring.svg" width="180" alt="SPDC Profile Logo">
+  <img src="https://lh3.googleusercontent.com/d/1Zzr8jDb97O_ChO4ma1i2aUOEwc3xbJyt" width="180" alt="SPDC Profile Logo">
 </p>
 
 <h1 align="center">Station Para Dawah Community</h1>
@@ -13,7 +13,7 @@
 
 <p align="center">
   <a href="https://spdc-info.github.io/">
-    <img src="https://drive.google.com/file/d/1Zzr8jDb97O_ChO4ma1i2aUOEwc3xbJyt/view?usp=drivesdk" alt="Official Website">
+    <img src="https://img.shields.io/badge/🌐_Official_Website-SPDC-059669?style=for-the-badge">
   </a>
 </p>
 
@@ -161,15 +161,6 @@ Website-টি বিভিন্ন ধরনের device-এর জন্য 
 
 ---
 
-## 🛠️ Open Source Project
-
-এই repository-তে SPDC-এর official website-এর source code সংরক্ষিত রয়েছে।
-
-**Repository:** `spdc-info/spdc-info.github.io`
-
-**Live Website:** https://spdc-info.github.io/
-
----
 
 ## 🤝 Get Involved
 
