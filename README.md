@@ -1,7 +1,14 @@
 # 🕌 Station Para Dawah Community — SPDC
 
 <p align="center">
-  <strong>দ্বীনের দাওয়াহ, ভ্রাতৃত্ব ও মানবসেবায় নিয়োজিত</strong>
+  <img src="https://lh3.googleusercontent.com/d/1Zzr8jDb97O_ChO4ma1i2aUOEwc3xbJyt" width="140" alt="SPDC Logo">
+</p>
+
+<h1 align="center">Station Para Dawah Community</h1>
+
+<p align="center">
+  <strong>স্টেশন পাড়া দাওয়াহ্ কমিউনিটি</strong><br>
+  <em>দ্বীনের দাওয়াহ, ভ্রাতৃত্ব ও মানবসেবায় নিয়োজিত</em>
 </p>
 
 <p align="center">
