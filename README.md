@@ -1,7 +1,7 @@
 # 🕌 Station Para Dawah Community — SPDC
 
 <p align="center">
-  <img src="https://lh3.googleusercontent.com/d/1Zzr8jDb97O_ChO4ma1i2aUOEwc3xbJyt" width="140" alt="SPDC Logo">
+  <img src="https://raw.githubusercontent.com/spdc-info/spdc-info.github.io/main/assets/spdc-profile-ring.svg" width="180" alt="SPDC Profile Logo">
 </p>
 
 <h1 align="center">Station Para Dawah Community</h1>
